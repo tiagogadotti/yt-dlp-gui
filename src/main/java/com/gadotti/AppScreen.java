@@ -1,12 +1,15 @@
-package com.gadotti;
+package src.main.java.com.gadotti;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 
 public class AppScreen extends JFrame {
+    JTextArea terminalOutput;
 
     public AppScreen() {
         // Configurações iniciais da janela
@@ -65,11 +68,56 @@ public class AppScreen extends JFrame {
         // Botão de executar com ícone de play
         JPanel executePanel = new JPanel();
         JButton executeButton = new JButton("Baixar");
-        executeButton.setIcon(new ImageIcon("src/main/resources/play-button.png"));
+        executeButton.setMinimumSize(new Dimension(10,5));
+        //executeButton.setIcon(new ImageIcon("src/main/resources/play-button.png"));
+        executeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SwingUtilities.invokeLater(() -> {
+                    terminalOutput.setText("Iniciando Download...... \n ");
+                    terminalOutput.setForeground(Color.BLACK);
+                });
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String url = urlField.getText();
+                        String pastaDestino = directoryField.getText();
+                        if (url.indexOf("?list") > -1){
+                            url = url.substring(0, url.indexOf("?list"));
+                        }
+                        if (url.indexOf("&list") > -1){
+                            url = url.substring(0, url.indexOf("&list"));
+                        }
+                        System.out.println(url);
+
+                        // Verifica se os campos não estão vazios
+                        if (url.isEmpty() || pastaDestino.isEmpty()) {
+                            if (url.isEmpty()) {
+                                appendToTerminalOutput("Link faltante !!!", Color.RED);
+                            }
+                            if (pastaDestino.isEmpty()) {
+                                appendToTerminalOutput("Pasta destino faltante !!!", Color.RED);
+                            }
+                        } else {
+                            // Chama o método baixar e verifica o status
+                            STATUS status = baixar(pastaDestino, url);
+                            if (status == STATUS.SUCESSO) {
+                                appendToTerminalOutput("Download concluído com sucesso.", Color.GREEN);
+                            } else {
+                                appendToTerminalOutput("Falha no download.", Color.RED);
+                            }
+                        }
+                    }
+                }).start();
+            }
+        });
+
+
         executePanel.add(executeButton);
 
         // Campo para saída do terminal
-        JTextArea terminalOutput = new JTextArea(12, 30); // Define um tamanho específico
+        terminalOutput = new JTextArea(12, 30); // Define um tamanho específico
         terminalOutput.setEditable(false);
 
         // Adicionando painéis ao frame
@@ -78,5 +126,37 @@ public class AppScreen extends JFrame {
         add(new JScrollPane(terminalOutput), BorderLayout.SOUTH);
     }
 
+    private void appendToTerminalOutput(String message, Color color) {
+        terminalOutput.setForeground(color);
+        terminalOutput.append(message + "\n");
+    }
+
+    public STATUS baixar(String pastaDestino, String URL) {
+        try {
+            ProcessBuilder builder = new ProcessBuilder("yt-dlp", "-x", "--audio-format", "mp3", "-P", pastaDestino, URL);
+            builder.redirectErrorStream(true);
+            Process process = builder.start();
+
+            // Aguarda o processo ser concluído
+            int exitCode = process.waitFor();
+
+            // Verifica o código de saída
+            if (exitCode == 0) {
+                return STATUS.SUCESSO;
+            } else {
+                return STATUS.FALHA;
+            }
+        } catch (Exception e) {
+            // Imprime a exceção no console e exibe a mensagem de erro
+            e.printStackTrace();
+            SwingUtilities.invokeLater(() -> appendToTerminalOutput("Erro: " + e.getMessage(), Color.RED));
+            return STATUS.FALHA;
+        }
+    }
+
+    private enum STATUS {
+        SUCESSO,
+        FALHA
+    }
 
 }
