@@ -8,3 +8,7 @@ Dependêcnias:
 
 - yt-dlp: instalar e colocar o caminho no Path.
 - Java 17.
+
+
+
+![image](https://github.com/tiagogadotti/yt-dlp-gui/assets/42398351/1fb528fa-a3ee-44b2-85c9-f1c44109826d)
