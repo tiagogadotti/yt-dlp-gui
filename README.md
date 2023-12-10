@@ -6,5 +6,5 @@ Não encontrei uma interface gráfica para o yt-dlp, então desenvolvi esta inte
 
 Dependêcnias:
 
-yt-dlp: instalar e colocar o caminho no Path.
+yt-dlp: instalar e colocar o caminho no Path.\n
 Java 17.
